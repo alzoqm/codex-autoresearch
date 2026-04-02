@@ -155,6 +155,17 @@ In exec mode, the helper scripts keep JSON state in scratch storage by default i
 - Re-read the latest entries before choosing the next idea.
 - The standalone health-check helper reports warnings/blockers as JSON. Append a TSV row only when the runtime explicitly decides to log a blocker or recovery event.
 
+## Research-First Artifacts
+
+When `research_mode=research_first`, the TSV remains the authoritative experiment audit trail, but it should be paired with:
+
+- `research-sources.md`
+- `research-corpus.jsonl`
+- `hypothesis-registry.json`
+- `experiment-reports/EXP-*.md`
+
+Iteration labels may include `hypothesis-id/<id>` and `source-id/<id>` so the numeric audit trail remains linked to curated evidence and report artifacts.
+
 ## Cross-Validation with JSON State
 
 `autoresearch-state.json` is the primary recovery source for session resume (see `references/session-resume-protocol.md`). The TSV log and the JSON state file serve complementary roles:

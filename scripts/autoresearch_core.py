@@ -24,11 +24,17 @@ SESSION_MODE_CHOICES = ("foreground", "background")
 SELECTION_MODE_CHOICES = ("explore", "exploit")
 STRATEGY_POLICY_CHOICES = ("fixed", "epsilon_greedy", "ucb")
 EXPLORATION_SOURCE_CHOICES = ("local", "web", "docs", "papers")
+RESEARCH_MODE_CHOICES = ("classic", "research_first")
+RESEARCH_PHASE_CHOICES = ("exploration", "exploitation")
 EXEC_SCRATCH_ROOT = Path("/tmp/codex-autoresearch-exec")
 LAUNCH_MANIFEST_NAME = "autoresearch-launch.json"
 RUNTIME_STATE_NAME = "autoresearch-runtime.json"
 RUNTIME_LOG_NAME = "autoresearch-runtime.log"
 LESSONS_FILE_NAME = "autoresearch-lessons.md"
+SOURCES_SUMMARY_NAME = "research-sources.md"
+CORPUS_FILE_NAME = "research-corpus.jsonl"
+HYPOTHESIS_REGISTRY_NAME = "hypothesis-registry.json"
+EXPERIMENT_REPORTS_DIRNAME = "experiment-reports"
 HOOK_CONTEXT_NAME = "autoresearch-hook-context.json"
 AUTORESEARCH_OWNED_BASENAMES = {
     "research-results.tsv",
@@ -38,6 +44,9 @@ AUTORESEARCH_OWNED_BASENAMES = {
     "autoresearch-runtime.log",
     "autoresearch-lessons.md",
     "autoresearch-hook-context.json",
+    "research-sources.md",
+    "research-corpus.jsonl",
+    "hypothesis-registry.json",
 }
 
 MAIN_LABEL_RE = re.compile(r"^(0|[1-9]\d*)$")
@@ -77,6 +86,7 @@ REQUIRED_STATE_FIELDS = {
     "consecutive_discards",
     "pivot_count",
     "last_status",
+    "phase",
 }
 ENV_ASSIGNMENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=.*$")
 

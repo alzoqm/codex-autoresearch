@@ -158,6 +158,8 @@ Use this appendix only when you need help choosing the shortest useful question 
 
 - "I can test multiple ideas at the same time using parallel experiments. Want me to try up to 3 hypotheses per round? (I detected {N} GPUs/NPUs -- each experiment would need how many?)"
 - "If I get stuck, can I search the web for solutions? (results are always verified mechanically before applying)"
+- "Should this run start in classic mode, or do you want a research-first pass that curates papers/docs/web sources into reusable artifacts before code changes?"
+- "If we use research-first mode, how much exploration do you want before exploitation starts? I can gate that with a source count and hypothesis count."
 - "Should I remember lessons from this run for future sessions?"
 
 ### Debug-Specific
@@ -204,6 +206,8 @@ The wizard internally maps the conversation to these fields (the user never sees
 - Rollback (optional) -- ask only if destructive rollback may be needed for unattended execution; otherwise default to non-destructive revert
 - Parallel (optional) -- ask if environment supports it (CPU >= 4, RAM >= 8GB)
 - Web search (optional) -- ask if user wants web search when stuck
+- Research mode (optional) -- ask when the user wants exploration-first autonomous research instead of immediate exploitation
+- Exploration phase budget / Min sources / Min hypotheses (optional) -- ask only when research-first mode is selected
 - Lessons (optional) -- enabled by default, ask only if user wants to disable
 
 ### plan

@@ -37,6 +37,10 @@ OPTIONAL_CONFIG_FIELDS = (
     ("strategy_policy", "Strategy policy"),
     ("exploration_ratio", "Exploration ratio"),
     ("exploration_sources", "Exploration sources"),
+    ("research_mode", "Research mode"),
+    ("exploration_phase_budget", "Exploration phase budget"),
+    ("min_sources", "Min sources"),
+    ("min_hypotheses", "Min hypotheses"),
 )
 
 
@@ -104,6 +108,14 @@ def build_runtime_prompt(
             [
                 "- Use autoresearch_orchestration_decide.py before new hypothesis selection when you need to rebalance exploration vs exploitation.",
                 "- Record iteration selection metadata through autoresearch_record_iteration.py using --selection-mode, --strategy-family, and --evidence-source when applicable.",
+            ]
+        )
+    if config.get("research_mode") == "research_first":
+        lines.extend(
+            [
+                "- Begin with an explicit exploration phase: collect sources, write `research-sources.md`, populate `research-corpus.jsonl`, and rank hypotheses before major code edits.",
+                "- Persist curated evidence with autoresearch_collect_sources.py, ranked hypotheses with autoresearch_generate_hypotheses.py, and each tested hypothesis with autoresearch_write_experiment_report.py.",
+                "- Do not enter pure exploitation until the configured minimum source and hypothesis counts are satisfied or a hard blocker is logged.",
             ]
         )
     return "\n".join(lines).strip() + "\n"

@@ -203,6 +203,10 @@ Codex infers these from your natural language input and repo context. You never 
 | `Strategy policy` | `fixed` | Exploration/exploitation scheduler: `fixed`, `epsilon_greedy`, or `ucb` |
 | `Exploration ratio` | `0` | Target fraction of iterations spent exploring novel ideas |
 | `Exploration sources` | none | Allowed evidence inputs for exploratory hypotheses: `local`, `web`, `docs`, `papers` |
+| `Research mode` | `classic` | `classic` starts directly in exploitation; `research_first` curates sources and hypotheses before code edits |
+| `Exploration phase budget` | auto | Exploration bookkeeping budget before exploitation can start |
+| `Min sources` | auto | Minimum curated sources required before exploitation can start in `research_first` |
+| `Min hypotheses` | auto | Minimum ranked hypotheses required before exploitation can start in `research_first` |
 | `Required keep labels` | none | Structured labels that a numerically improved trial must carry before it can enter retained state (for example `production-path`, `real-backend`) |
 | `Stop condition` | none | Custom early-stop rule (e.g., "stop when metric reaches 1" or "stop when metric reaches 90") |
 | `Required stop labels` | none | Structured labels that the retained keep must carry before a numeric stop condition can terminate the run (for example `production-path`, `root-cause`) |

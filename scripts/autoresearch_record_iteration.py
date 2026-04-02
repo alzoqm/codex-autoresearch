@@ -71,6 +71,37 @@ def build_parser() -> argparse.ArgumentParser:
         default=[],
         help="Evidence source backing this iteration. May be repeated.",
     )
+    parser.add_argument(
+        "--phase",
+        choices=["exploration", "exploitation"],
+        help="Persist the active research phase for this iteration.",
+    )
+    parser.add_argument(
+        "--hypothesis-id",
+        help="Structured hypothesis identifier associated with this experiment.",
+    )
+    parser.add_argument(
+        "--queue-hypothesis-id",
+        action="append",
+        default=[],
+        help="Remaining ranked hypotheses after this iteration. May be repeated.",
+    )
+    parser.add_argument(
+        "--source-id",
+        action="append",
+        default=[],
+        help="Curated source identifiers supporting this iteration. May be repeated.",
+    )
+    parser.add_argument(
+        "--report-path",
+        help="Experiment report path written for this iteration.",
+    )
+    parser.add_argument(
+        "--reflection",
+        action="append",
+        default=[],
+        help="Short reflection bullets extracted from the experiment report. May be repeated.",
+    )
     return parser
 
 
@@ -111,6 +142,12 @@ def main() -> int:
         strategy_family=args.strategy_family,
         evidence_sources=args.evidence_source,
     )
+    if args.hypothesis_id:
+        normalized_labels.append(f"hypothesis-id/{args.hypothesis_id.strip().lower()}")
+    for source_id in args.source_id:
+        label = f"source-id/{source_id.strip().lower()}"
+        if source_id.strip() and label not in normalized_labels:
+            normalized_labels.append(label)
     final_status = args.status
     final_description = args.description
     if args.status == "keep":
@@ -155,6 +192,11 @@ def main() -> int:
         next_iteration=next_iteration,
         repo_commit_map=repo_commit_map,
         labels=normalized_labels,
+        phase=args.phase,
+        active_hypothesis_id=args.hypothesis_id,
+        queued_hypothesis_ids=args.queue_hypothesis_id,
+        last_report_path=args.report_path,
+        reflection_summary=args.reflection,
     )
     write_json_atomic(state_path, final_payload)
 
@@ -175,6 +217,9 @@ def main() -> int:
                 "trial_metric": final_payload["state"]["last_trial_metric"],
                 "trial_labels": final_payload["state"].get("last_trial_labels", []),
                 "retained_labels": final_payload["state"].get("current_labels", []),
+                "phase": final_payload["state"].get("phase", ""),
+                "active_hypothesis_id": final_payload["state"].get("active_hypothesis_id", ""),
+                "last_report_path": final_payload["state"].get("last_report_path", ""),
                 "trial_repo_commits": final_payload["state"].get("last_trial_repo_commits", {}),
                 "results_path": str(results_path),
                 "state_path": str(state_path),

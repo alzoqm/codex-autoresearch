@@ -18,7 +18,7 @@ Autonomous goal-directed iteration. Modify -> Verify -> Keep/Discard -> Repeat.
    - `references/environment-awareness.md` before choosing hardware-sensitive work
    - `references/interaction-wizard.md` for every new interactive launch (`loop`, `debug`, `fix`, `security`, `ship`) before execution begins
    - `references/results-logging.md` only when debugging TSV/state semantics or helper behavior directly
-4. Load the selected mode workflow reference plus only the detailed cross-cutting protocols that actually apply (`lessons`, `pivot`, `health-check`, `parallel`, `web-search`, `hypothesis-perspectives`, `orchestration`).
+4. Load the selected mode workflow reference plus only the detailed cross-cutting protocols that actually apply (`lessons`, `pivot`, `health-check`, `parallel`, `web-search`, `hypothesis-perspectives`, `orchestration`, `exploration-loop`, `hypothesis-registry`, `experiment-report`).
 5. Use the bundled helper scripts when stateful artifacts or runtime control are involved. Resolve them relative to the loaded skill bundle root (`<skill-root>/scripts/...`), not the target repo root. In the common repo-local install this means commands such as `python3 .agents/skills/codex-autoresearch/scripts/autoresearch_init_run.py ...`. For repo-managed control-plane helpers (`autoresearch_resume_check.py`, `autoresearch_launch_gate.py`, `autoresearch_resume_prompt.py`, `autoresearch_supervisor_status.py`, `autoresearch_runtime_ctl.py status/stop`, `autoresearch_hooks_ctl.py status/install/uninstall`), prefer `--repo <repo>` when applicable and let the helper derive default artifact paths.
 6. Execute the selected workflow exactly as written and produce the required structured output and artifacts.
 
@@ -101,6 +101,7 @@ For every new interactive run, use the wizard contract in `references/interactio
 18. In `exec` mode, never leave repo-root `autoresearch-state.json` behind. If helper scripts need state, use the exec scratch path and explicitly clean it up before exit. When you use `autoresearch_init_run.py --mode exec ...` with the default repo-root artifact names, do not manually rename old `research-results.tsv` or `autoresearch-state.json`; the helper already archives them to the canonical `research-results.prev.tsv` and `autoresearch-state.prev.json` paths before it starts fresh.
 19. After any context compaction event (the CLI warns about thread length and compaction), re-read `references/runtime-hard-invariants.md`, `references/core-principles.md`, and the selected mode workflow from disk before the next iteration. Do not rely on memory of those documents after compaction.
 20. Every 10 iterations, perform the Protocol Fingerprint Check defined in `references/runtime-hard-invariants.md`. Use Phase 8.7 of `references/autonomous-loop-protocol.md` only for the detailed re-anchoring procedure. If any item fails, re-read all loaded runtime docs from disk before continuing.
+21. If `research_mode=research_first`, the runtime must begin by curating sources into `research-sources.md` / `research-corpus.jsonl`, generate ranked hypotheses in `hypothesis-registry.json`, and write `experiment-reports/EXP-*.md` for tested hypotheses before relying on lessons-only summaries.
 
 ## Structured Output
 
@@ -158,3 +159,6 @@ Codex scans the repo, asks targeted questions to clarify your intent, asks you t
 - `references/health-check-protocol.md`
 - `references/hypothesis-perspectives.md`
 - `references/orchestration-protocol.md`
+- `references/exploration-loop-protocol.md`
+- `references/hypothesis-registry-protocol.md`
+- `references/experiment-report-protocol.md`

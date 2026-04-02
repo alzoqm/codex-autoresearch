@@ -23,8 +23,10 @@ from autoresearch_helpers import (
     normalize_labels,
     normalize_exploration_ratio,
     normalize_exploration_sources,
+    normalize_research_config,
     normalize_strategy_policy,
     empty_orchestration_summary,
+    empty_research_state,
     parse_decimal,
     resolve_state_path,
     serialize_repo_targets,
@@ -117,6 +119,27 @@ def build_parser() -> argparse.ArgumentParser:
         default=[],
         help="Allowed exploration evidence sources. May be repeated.",
     )
+    parser.add_argument(
+        "--research-mode",
+        choices=["classic", "research_first"],
+        default="classic",
+        help="How the run enters exploration. research_first forces an explicit exploration phase before exploitation.",
+    )
+    parser.add_argument(
+        "--exploration-phase-budget",
+        type=int,
+        help="Number of exploration bookkeeping iterations budgeted before exploitation can start.",
+    )
+    parser.add_argument(
+        "--min-sources",
+        type=int,
+        help="Minimum curated sources required before exploitation may start.",
+    )
+    parser.add_argument(
+        "--min-hypotheses",
+        type=int,
+        help="Minimum ranked hypotheses required before exploitation may start.",
+    )
     parser.add_argument("--environment-summary")
     parser.add_argument("--baseline-metric", required=True)
     parser.add_argument("--baseline-commit", required=True)
@@ -193,10 +216,33 @@ def main() -> int:
     strategy_policy = normalize_strategy_policy(args.strategy_policy)
     exploration_ratio = normalize_exploration_ratio(args.exploration_ratio)
     exploration_sources = normalize_exploration_sources(args.exploration_source)
+    research_config = normalize_research_config(
+        {
+            "research_mode": args.research_mode,
+            "exploration_phase_budget": args.exploration_phase_budget,
+            "min_sources": args.min_sources,
+            "min_hypotheses": args.min_hypotheses,
+        },
+        base_dir=results_path.parent,
+    )
     comments.append(f"# strategy_policy: {strategy_policy}")
     comments.append(f"# exploration_ratio: {format(exploration_ratio, 'f')}")
     if exploration_sources:
         comments.append(f"# exploration_sources: {', '.join(exploration_sources)}")
+    comments.append(f"# research_mode: {research_config['research_mode']}")
+    comments.append(
+        f"# exploration_phase_budget: {research_config['exploration_phase_budget']}"
+    )
+    comments.append(f"# min_sources: {research_config['min_sources']}")
+    comments.append(f"# min_hypotheses: {research_config['min_hypotheses']}")
+    comments.append(f"# sources_summary_path: {research_config['sources_summary_path']}")
+    comments.append(f"# corpus_path: {research_config['corpus_path']}")
+    comments.append(
+        f"# hypothesis_registry_path: {research_config['hypothesis_registry_path']}"
+    )
+    comments.append(
+        f"# experiment_reports_dir: {research_config['experiment_reports_dir']}"
+    )
     comments.append(f"# goal: {args.goal}")
     comments.append(f"# scope: {repo_targets[0].scope}")
     comments.append(
@@ -250,6 +296,7 @@ def main() -> int:
         "strategy_policy": strategy_policy,
         "exploration_ratio": format(exploration_ratio, "f"),
     }
+    config.update(research_config)
     if exploration_sources:
         config["exploration_sources"] = exploration_sources
     if session_mode is not None:
@@ -280,6 +327,11 @@ def main() -> int:
         "pivot_count": 0,
         "last_status": "baseline",
         "orchestration": empty_orchestration_summary(),
+        "phase": "exploration" if research_config["research_mode"] == "research_first" else "exploitation",
+        "research": empty_research_state(
+            config,
+            phase="exploration" if research_config["research_mode"] == "research_first" else "exploitation",
+        ),
     }
     repo_commit_map = repo_commit_map_for_targets(
         repo_targets=repo_targets,
@@ -315,6 +367,8 @@ def main() -> int:
                 "baseline_metric": decimal_to_json_number(baseline_metric),
                 "baseline_commit": args.baseline_commit,
                 "parallel_mode": args.parallel_mode,
+                "research_mode": research_config["research_mode"],
+                "phase": summary["phase"],
                 "session_mode": session_mode,
                 "message": f"Initialized run at baseline metric {format_decimal(baseline_metric)}.",
             },

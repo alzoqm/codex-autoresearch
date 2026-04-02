@@ -92,6 +92,14 @@ def add_manifest_args(parser: argparse.ArgumentParser) -> None:
         default=[],
         help="Allowed exploration evidence sources. May be repeated.",
     )
+    parser.add_argument(
+        "--research-mode",
+        choices=["classic", "research_first"],
+        default="classic",
+    )
+    parser.add_argument("--exploration-phase-budget", type=int)
+    parser.add_argument("--min-sources", type=int)
+    parser.add_argument("--min-hypotheses", type=int)
     parser.add_argument("--approval", action="append", default=[])
     parser.add_argument("--default", action="append", default=[])
     parser.add_argument("--resume-seed", action="append", default=[])

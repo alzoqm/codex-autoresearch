@@ -34,6 +34,12 @@ from autoresearch_orchestration import (
     normalize_exploration_sources,
     normalize_strategy_policy,
 )
+from autoresearch_research import (
+    clone_research_state,
+    empty_research_state,
+    normalize_research_config,
+    normalize_research_phase,
+)
 
 
 def read_json(path: Path) -> dict[str, Any]:
@@ -60,6 +66,9 @@ def read_state_payload(path: Path) -> dict[str, Any]:
     if not isinstance(state, dict):
         raise AutoresearchError(f"Invalid state JSON in {path}: state must be an object")
 
+    if "phase" not in state:
+        research = clone_research_state(state, config=config)
+        state["phase"] = research["phase"]
     missing_fields = sorted(REQUIRED_STATE_FIELDS - state.keys())
     if missing_fields:
         raise AutoresearchError(
@@ -273,6 +282,8 @@ def log_summary(parsed: ParsedLog, direction: str) -> dict[str, Any]:
         "worker_rows": 0,
         "main_rows": 1,
         "orchestration": clone_orchestration_summary(None),
+        "phase": normalize_research_phase(None, research_mode="classic"),
+        "research": empty_research_state({"research_mode": "classic"}),
     }
     for row in parsed.rows[1:]:
         if row.worker_parent_iteration is not None:
@@ -388,6 +399,7 @@ def compare_summary_to_state(
     compare_scalar_field("consecutive_discards")
     compare_scalar_field("pivot_count")
     compare_scalar_field("last_status")
+    compare_scalar_field("phase")
     if "orchestration" in state:
         expected_orchestration = clone_orchestration_summary(reconstructed.get("orchestration"))
         actual_orchestration = clone_orchestration_summary(state.get("orchestration"))
@@ -410,7 +422,11 @@ def compare_summary_to_state(
     return mismatches
 
 
-def config_from_results_metadata(metadata: dict[str, str]) -> dict[str, Any]:
+def config_from_results_metadata(
+    metadata: dict[str, str],
+    *,
+    base_dir: Path | None = None,
+) -> dict[str, Any]:
     config: dict[str, Any] = {}
 
     direction = metadata.get("metric_direction")
@@ -430,6 +446,14 @@ def config_from_results_metadata(metadata: dict[str, str]) -> dict[str, Any]:
         "execution_policy": "execution_policy",
         "strategy_policy": "strategy_policy",
         "exploration_ratio": "exploration_ratio",
+        "research_mode": "research_mode",
+        "exploration_phase_budget": "exploration_phase_budget",
+        "min_sources": "min_sources",
+        "min_hypotheses": "min_hypotheses",
+        "sources_summary_path": "sources_summary_path",
+        "corpus_path": "corpus_path",
+        "hypothesis_registry_path": "hypothesis_registry_path",
+        "experiment_reports_dir": "experiment_reports_dir",
     }
     for metadata_key, config_key in field_map.items():
         value = metadata.get(metadata_key)
@@ -488,6 +512,8 @@ def config_from_results_metadata(metadata: dict[str, str]) -> dict[str, Any]:
             normalize_exploration_ratio(config["exploration_ratio"]),
             "f",
         )
+    if "research_mode" in config:
+        config.update(normalize_research_config(config, base_dir=base_dir or Path.cwd()))
 
     return config
 
@@ -501,6 +527,7 @@ def build_state_payload(
     supervisor: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     session_mode = config.get("session_mode")
+    research_state = clone_research_state(summary.get("research"), config=config)
     payload = {
         "version": 1,
         "run_tag": run_tag or "",
@@ -526,6 +553,13 @@ def build_state_payload(
             "pivot_count": summary["pivot_count"],
             "last_status": summary["last_status"],
             "orchestration": clone_orchestration_summary(summary.get("orchestration")),
+            "phase": summary.get("phase") or research_state["phase"],
+            "knowledge": deepcopy(research_state["knowledge"]),
+            "exploration": deepcopy(research_state["exploration"]),
+            "active_hypothesis_id": research_state["active_hypothesis_id"],
+            "queued_hypothesis_ids": list(research_state["queued_hypothesis_ids"]),
+            "last_report_path": research_state["last_report_path"],
+            "reflection_summary": list(research_state["reflection_summary"]),
         },
         "updated_at": utc_now(),
     }
@@ -552,7 +586,7 @@ def rebuild_exec_state_payload_from_results(
             "Cannot rebuild scratch state from a non-exec results log."
         )
 
-    config = config_from_results_metadata(parsed.metadata)
+    config = config_from_results_metadata(parsed.metadata, base_dir=results_path.parent)
     direction = config.get("direction")
     if direction not in {"lower", "higher"}:
         raise AutoresearchError(

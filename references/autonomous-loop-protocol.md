@@ -28,6 +28,8 @@ Optional:
 - `Required keep labels` (when the run should only retain results from a specific mechanism, path, backend, or root-cause signal)
 - `Required stop labels` (when the goal has a structural or causal success requirement, not just a numeric threshold)
 - `Rollback policy` (required before launch if destructive rollback may be used)
+- `Research mode` (`classic` or `research_first`)
+- `Exploration phase budget`, `Min sources`, `Min hypotheses` (when research-first mode is selected)
 
 For every new interactive loop, use the wizard contract from `references/interaction-wizard.md` to scan the repo, clarify with the user, and confirm the launch-ready config before the loop begins.
 
@@ -197,6 +199,12 @@ Before committing to a hypothesis, filter against environment constraints per `r
 ### Exploration / Exploitation Scheduling
 
 If the launch config includes an exploration policy, follow `references/orchestration-protocol.md` before choosing the next hypothesis. Exploration still needs a falsifiable metric and mechanical verification.
+
+If `research_mode=research_first`, first follow `references/exploration-loop-protocol.md`:
+
+1. Curate reusable sources into `research-sources.md` and `research-corpus.jsonl`.
+2. Persist ranked hypothesis cards in `hypothesis-registry.json`.
+3. Only then transition into the normal exploitation loop, carrying the selected hypothesis id into experiment reports and iteration metadata.
 
 ### Multi-Perspective Reasoning
 

@@ -13,6 +13,7 @@ from autoresearch_helpers import (
     normalize_labels,
     normalize_exploration_ratio,
     normalize_exploration_sources,
+    normalize_research_config,
     normalize_strategy_policy,
     read_state_payload,
     read_runtime_payload,
@@ -122,6 +123,17 @@ def manifest_config_from_args(args: argparse.Namespace) -> dict[str, Any]:
             "f",
         ),
     }
+    config.update(
+        normalize_research_config(
+            {
+                "research_mode": getattr(args, "research_mode", None),
+                "exploration_phase_budget": getattr(args, "exploration_phase_budget", None),
+                "min_sources": getattr(args, "min_sources", None),
+                "min_hypotheses": getattr(args, "min_hypotheses", None),
+            },
+            base_dir=primary_repo,
+        )
+    )
     exploration_sources = normalize_exploration_sources(
         getattr(args, "exploration_source", []),
     )

@@ -8,9 +8,11 @@ from typing import Any
 from autoresearch_helpers import (
     AutoresearchError,
     apply_iteration_to_orchestration,
+    apply_research_state_updates,
     build_state_payload,
     clone_state_payload,
     clone_orchestration_summary,
+    clone_research_state,
     decimal_to_json_number,
     improvement,
     normalize_labels,
@@ -71,6 +73,12 @@ def apply_status_transition(
     next_iteration: int,
     repo_commit_map: dict[str, str] | None = None,
     labels: list[str] | None = None,
+    phase: str | None = None,
+    active_hypothesis_id: str | None = None,
+    queued_hypothesis_ids: list[str] | None = None,
+    last_report_path: str | None = None,
+    reflection_summary: list[str] | None = None,
+    exploration_updates: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     new_payload = clone_state_payload(payload)
     state = new_payload["state"]
@@ -95,6 +103,11 @@ def apply_status_transition(
         state["last_trial_repo_commits"] = dict(trial_repo_commits)
     else:
         state.pop("last_trial_repo_commits", None)
+    state["phase"] = (
+        phase
+        if phase is not None
+        else state.get("phase", "exploitation")
+    )
 
     if status == "keep":
         state["keeps"] = state.get("keeps", 0) + 1
@@ -141,6 +154,16 @@ def apply_status_transition(
             state["best_iteration"] = next_iteration
     elif status == "pivot":
         state["pivot_count"] = state.get("pivot_count", 0) + 1
+    research_state = apply_research_state_updates(
+        state,
+        config=new_payload.get("config", {}),
+        phase=state.get("phase"),
+        active_hypothesis_id=active_hypothesis_id,
+        queued_hypothesis_ids=queued_hypothesis_ids,
+        last_report_path=last_report_path,
+        reflection_summary=reflection_summary,
+        exploration_updates=exploration_updates,
+    )
     rewritten_summary = {
         "iteration": state["iteration"],
         "baseline_metric": parse_decimal(state["baseline_metric"], "baseline_metric"),
@@ -161,6 +184,11 @@ def apply_status_transition(
         "pivot_count": state["pivot_count"],
         "last_status": state["last_status"],
         "orchestration": clone_orchestration_summary(state.get("orchestration")),
+        "phase": research_state["phase"],
+        "research": clone_research_state(
+            research_state,
+            config=new_payload.get("config", {}),
+        ),
     }
     if "last_repo_commits" in state:
         rewritten_summary["last_repo_commits"] = dict(state["last_repo_commits"])

@@ -26,7 +26,8 @@
     "blocked": 0,
     "consecutive_discards": 0,
     "pivot_count": 0,
-    "last_status": "keep"
+    "last_status": "keep",
+    "phase": "exploitation"
   },
   "updated_at": "2026-03-19T08:15:32Z"
 }
