@@ -131,6 +131,13 @@ Every iterating mode (loop, debug, fix, security, ship) shares the same cycle:
 6. **Decide** -- metric improved and guard passed = keep; otherwise revert
 7. **Log** -- record the result before starting the next experiment
 
+When orchestration is enabled, hypothesis selection is no longer implicitly exploit-only. The runtime can keep a configurable exploration budget and choose between:
+
+- **explore** -- novel strategy families, paper/doc/web-derived ideas, structural changes
+- **exploit** -- incremental refinement around the current best retained result
+
+The helper `autoresearch_orchestration_decide.py` turns the stored run state into the next recommended selection mode. Record that choice on each iteration with `--selection-mode`, and add `--strategy-family` / `--evidence-source` when you want the scheduler to learn which idea families are paying off.
+
 Revert uses the rollback strategy approved during setup. In a dedicated experiment branch/worktree with pre-launch approval, it may use `git reset --hard HEAD~1`; otherwise it uses `git revert --no-edit HEAD`.
 
 Run artifacts should be updated by the helper scripts rather than hand-editing TSV or JSON. Use the skill-bundle path, not the target repo's own `scripts/` directory. Here `<skill-root>` means the directory containing the loaded `SKILL.md`; in the common repo-local install this is `.agents/skills/codex-autoresearch`.
@@ -193,6 +200,9 @@ Codex infers these from your natural language input and repo context. You never 
 | `Guard` | none | Regression-prevention command that must always pass |
 | `Iterations` | unlimited | Stop after N iterations |
 | `Run tag` | none (optional) | Label for this run in the results log when the launch config provides one |
+| `Strategy policy` | `fixed` | Exploration/exploitation scheduler: `fixed`, `epsilon_greedy`, or `ucb` |
+| `Exploration ratio` | `0` | Target fraction of iterations spent exploring novel ideas |
+| `Exploration sources` | none | Allowed evidence inputs for exploratory hypotheses: `local`, `web`, `docs`, `papers` |
 | `Required keep labels` | none | Structured labels that a numerically improved trial must carry before it can enter retained state (for example `production-path`, `real-backend`) |
 | `Stop condition` | none | Custom early-stop rule (e.g., "stop when metric reaches 1" or "stop when metric reaches 90") |
 | `Required stop labels` | none | Structured labels that the retained keep must carry before a numeric stop condition can terminate the run (for example `production-path`, `root-cause`) |

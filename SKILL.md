@@ -18,7 +18,7 @@ Autonomous goal-directed iteration. Modify -> Verify -> Keep/Discard -> Repeat.
    - `references/environment-awareness.md` before choosing hardware-sensitive work
    - `references/interaction-wizard.md` for every new interactive launch (`loop`, `debug`, `fix`, `security`, `ship`) before execution begins
    - `references/results-logging.md` only when debugging TSV/state semantics or helper behavior directly
-4. Load the selected mode workflow reference plus only the detailed cross-cutting protocols that actually apply (`lessons`, `pivot`, `health-check`, `parallel`, `web-search`, `hypothesis-perspectives`).
+4. Load the selected mode workflow reference plus only the detailed cross-cutting protocols that actually apply (`lessons`, `pivot`, `health-check`, `parallel`, `web-search`, `hypothesis-perspectives`, `orchestration`).
 5. Use the bundled helper scripts when stateful artifacts or runtime control are involved. Resolve them relative to the loaded skill bundle root (`<skill-root>/scripts/...`), not the target repo root. In the common repo-local install this means commands such as `python3 .agents/skills/codex-autoresearch/scripts/autoresearch_init_run.py ...`. For repo-managed control-plane helpers (`autoresearch_resume_check.py`, `autoresearch_launch_gate.py`, `autoresearch_resume_prompt.py`, `autoresearch_supervisor_status.py`, `autoresearch_runtime_ctl.py status/stop`, `autoresearch_hooks_ctl.py status/install/uninstall`), prefer `--repo <repo>` when applicable and let the helper derive default artifact paths.
 6. Execute the selected workflow exactly as written and produce the required structured output and artifacts.
 
@@ -157,3 +157,4 @@ Codex scans the repo, asks targeted questions to clarify your intent, asks you t
 - `references/session-resume-protocol.md`
 - `references/health-check-protocol.md`
 - `references/hypothesis-perspectives.md`
+- `references/orchestration-protocol.md`

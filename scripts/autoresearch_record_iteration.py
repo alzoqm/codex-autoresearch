@@ -15,6 +15,7 @@ from autoresearch_helpers import (
     improvement,
     make_row,
     normalize_labels,
+    merge_orchestration_labels,
     parse_decimal,
     parse_results_log,
     repo_commit_map_for_targets,
@@ -59,6 +60,17 @@ def build_parser() -> argparse.ArgumentParser:
         default=[],
         help="Record per-repo commit provenance using PATH=COMMIT. May be repeated.",
     )
+    parser.add_argument("--selection-mode", choices=["explore", "exploit"])
+    parser.add_argument(
+        "--strategy-family",
+        help="Structured family name for this hypothesis or strategy line.",
+    )
+    parser.add_argument(
+        "--evidence-source",
+        action="append",
+        default=[],
+        help="Evidence source backing this iteration. May be repeated.",
+    )
     return parser
 
 
@@ -93,7 +105,12 @@ def main() -> int:
     if args.status == "keep" and not improvement(metric, current_metric, direction):
         raise AutoresearchError("Keep iterations must improve over the retained metric.")
 
-    normalized_labels = normalize_labels(args.label)
+    normalized_labels = merge_orchestration_labels(
+        normalize_labels(args.label),
+        selection_mode=args.selection_mode,
+        strategy_family=args.strategy_family,
+        evidence_sources=args.evidence_source,
+    )
     final_status = args.status
     final_description = args.description
     if args.status == "keep":

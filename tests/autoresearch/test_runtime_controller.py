@@ -53,6 +53,24 @@ class AutoresearchRuntimeControllerTest(AutoresearchScriptsTestBase):
                 ["real-backend", "production-path"],
             )
 
+    def test_create_launch_manifest_persists_orchestration_policy(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmpdir = Path(tmp)
+            created = self.create_launch_manifest(
+                tmpdir,
+                goal="Balance exploration and exploitation",
+                metric_name="score",
+                direction="higher",
+                verify="python eval.py",
+                strategy_policy="epsilon_greedy",
+                exploration_ratio="0.3",
+                exploration_sources=["docs", "papers"],
+            )
+            manifest = json.loads(Path(created["launch_path"]).read_text(encoding="utf-8"))
+            self.assertEqual(manifest["config"]["strategy_policy"], "epsilon_greedy")
+            self.assertEqual(manifest["config"]["exploration_ratio"], "0.3")
+            self.assertEqual(manifest["config"]["exploration_sources"], ["docs", "papers"])
+
     def test_runtime_launch_command_atomically_creates_manifest_and_starts(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmpdir = Path(tmp)

@@ -11,6 +11,9 @@ from autoresearch_helpers import (
     build_repo_targets,
     default_state_path,
     normalize_labels,
+    normalize_exploration_ratio,
+    normalize_exploration_sources,
+    normalize_strategy_policy,
     read_state_payload,
     read_runtime_payload,
     resolve_repo_path,
@@ -113,7 +116,17 @@ def manifest_config_from_args(args: argparse.Namespace) -> dict[str, Any]:
         "rollback_policy": args.rollback_policy,
         "parallel_mode": args.parallel_mode,
         "web_search": args.web_search,
+        "strategy_policy": normalize_strategy_policy(getattr(args, "strategy_policy", None)),
+        "exploration_ratio": format(
+            normalize_exploration_ratio(getattr(args, "exploration_ratio", None)),
+            "f",
+        ),
     }
+    exploration_sources = normalize_exploration_sources(
+        getattr(args, "exploration_source", []),
+    )
+    if exploration_sources:
+        config["exploration_sources"] = exploration_sources
     required_stop_labels = normalize_labels(getattr(args, "required_stop_label", []))
     if required_stop_labels:
         config["required_stop_labels"] = required_stop_labels

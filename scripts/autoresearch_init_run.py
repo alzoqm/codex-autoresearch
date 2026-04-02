@@ -8,6 +8,8 @@ from pathlib import Path
 
 from autoresearch_helpers import (
     AutoresearchError,
+    DEFAULT_EXPLORATION_RATIO,
+    DEFAULT_STRATEGY_POLICY,
     archive_path_to_prev,
     build_repo_targets,
     repo_commit_map_for_targets,
@@ -19,6 +21,10 @@ from autoresearch_helpers import (
     format_decimal,
     make_row,
     normalize_labels,
+    normalize_exploration_ratio,
+    normalize_exploration_sources,
+    normalize_strategy_policy,
+    empty_orchestration_summary,
     parse_decimal,
     resolve_state_path,
     serialize_repo_targets,
@@ -95,6 +101,22 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--parallel-mode", choices=["serial", "parallel"], default="serial")
     parser.add_argument("--web-search", choices=["enabled", "disabled"], default="disabled")
+    parser.add_argument(
+        "--strategy-policy",
+        choices=["fixed", "epsilon_greedy", "ucb"],
+        default=DEFAULT_STRATEGY_POLICY,
+    )
+    parser.add_argument(
+        "--exploration-ratio",
+        default=str(DEFAULT_EXPLORATION_RATIO),
+        help="Target exploration share between 0 and 1 inclusive.",
+    )
+    parser.add_argument(
+        "--exploration-source",
+        action="append",
+        default=[],
+        help="Allowed exploration evidence sources. May be repeated.",
+    )
     parser.add_argument("--environment-summary")
     parser.add_argument("--baseline-metric", required=True)
     parser.add_argument("--baseline-commit", required=True)
@@ -168,6 +190,13 @@ def main() -> int:
         comments.append(f"# run_tag: {args.run_tag}")
     comments.append(f"# parallel: {args.parallel_mode}")
     comments.append(f"# web_search: {args.web_search}")
+    strategy_policy = normalize_strategy_policy(args.strategy_policy)
+    exploration_ratio = normalize_exploration_ratio(args.exploration_ratio)
+    exploration_sources = normalize_exploration_sources(args.exploration_source)
+    comments.append(f"# strategy_policy: {strategy_policy}")
+    comments.append(f"# exploration_ratio: {format(exploration_ratio, 'f')}")
+    if exploration_sources:
+        comments.append(f"# exploration_sources: {', '.join(exploration_sources)}")
     comments.append(f"# goal: {args.goal}")
     comments.append(f"# scope: {repo_targets[0].scope}")
     comments.append(
@@ -218,7 +247,11 @@ def main() -> int:
         "rollback_policy": args.rollback_policy,
         "parallel_mode": args.parallel_mode,
         "web_search": args.web_search,
+        "strategy_policy": strategy_policy,
+        "exploration_ratio": format(exploration_ratio, "f"),
     }
+    if exploration_sources:
+        config["exploration_sources"] = exploration_sources
     if session_mode is not None:
         config["session_mode"] = session_mode
     if args.mode == "exec" or session_mode == "background":
@@ -246,6 +279,7 @@ def main() -> int:
         "consecutive_discards": 0,
         "pivot_count": 0,
         "last_status": "baseline",
+        "orchestration": empty_orchestration_summary(),
     }
     repo_commit_map = repo_commit_map_for_targets(
         repo_targets=repo_targets,

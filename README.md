@@ -32,6 +32,8 @@ The idea: tell Codex what you want to improve, then walk away. It modifies your 
 
 Inspired by [Karpathy's autoresearch](https://github.com/karpathy/autoresearch), generalized beyond ML to anything you can verify mechanically: test coverage, type errors, latency, lint warnings, security findings, release readiness — if a command can tell whether it improved, the loop can iterate on it.
 
+Now includes a production-grade exploration/exploitation orchestrator. You can keep the classic exploit-only loop, or configure a strategy policy plus exploration ratio so the runtime deliberately mixes novel hypothesis generation with local hill-climbing.
+
 ## Quick Start
 
 ```bash
@@ -149,6 +151,7 @@ These are covered in detail in [GUIDE.md](docs/GUIDE.md):
 
 - **Cross-run learning** — lessons from past runs bias future hypothesis generation
 - **Parallel experiments** — test up to 3 hypotheses simultaneously via git worktrees
+- **Exploration/exploitation orchestration** — choose `fixed`, `epsilon_greedy`, or `ucb` strategy scheduling and set an `exploration_ratio` between `0` and `1`
 - **Session resume** — interrupted runs pick up from the last consistent state
 - **CI/CD mode** (`exec`) — non-interactive, JSON output, for automation pipelines
 - **Dual-gate verification** — separate verify (did it improve?) and guard (did anything break?)
@@ -161,6 +164,9 @@ By default the loop favors small, verifiable steps — that's by design. But it 
 
 **Is this more for engineering optimization than research?**
 It's strongest when the goal and metric are clear — push coverage up, push errors down, push latency lower. For open-ended research where the direction itself is uncertain, use `plan` mode first to explore, then switch to `loop` once you know what to measure. Think of it as a human-AI collaboration: you provide judgment, it provides iteration speed.
+
+**Can it blend broad exploration with local exploitation?**
+Yes. Launch config now supports `strategy_policy` (`fixed`, `epsilon_greedy`, `ucb`), `exploration_ratio`, and `exploration_sources`. That lets Codex treat paper/doc/web-driven hypotheses as exploration while still spending the rest of the budget on exploitative refinement around the current best result.
 
 **How do I stop it?** Foreground: interrupt Codex. Background: `$codex-autoresearch` then ask to stop.
 

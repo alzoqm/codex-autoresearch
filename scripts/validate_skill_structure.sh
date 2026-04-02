@@ -44,6 +44,7 @@ required_references=(
   "$ROOT/references/session-resume-protocol.md"
   "$ROOT/references/health-check-protocol.md"
   "$ROOT/references/hypothesis-perspectives.md"
+  "$ROOT/references/orchestration-protocol.md"
 )
 
 required_scripts=(
@@ -67,6 +68,8 @@ required_scripts=(
   "$ROOT/scripts/autoresearch_supervisor_status.py"
   "$ROOT/scripts/autoresearch_select_parallel_batch.py"
   "$ROOT/scripts/check_skill_invariants.py"
+  "$ROOT/scripts/autoresearch_orchestration.py"
+  "$ROOT/scripts/autoresearch_orchestration_decide.py"
   "$ROOT/scripts/run_skill_e2e.sh"
 )
 
@@ -128,7 +131,7 @@ fi
 
 # Verify SKILL.md references all new protocol files
 for ref in runtime-hard-invariants loop-workflow lessons-protocol pivot-protocol web-search-protocol environment-awareness \
-           parallel-experiments-protocol session-resume-protocol health-check-protocol \
+           parallel-experiments-protocol session-resume-protocol health-check-protocol orchestration-protocol \
            hypothesis-perspectives exec-workflow; do
   if ! grep -q "$ref" "$ROOT/SKILL.md"; then
     echo "SKILL.md does not reference $ref" >&2

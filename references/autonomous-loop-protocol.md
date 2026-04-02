@@ -194,6 +194,10 @@ Choose one concrete hypothesis. When parallel mode is active (see `references/pa
 
 Before committing to a hypothesis, filter against environment constraints per `references/environment-awareness.md`. Do not attempt hypotheses that require resources the environment lacks (e.g., GPU optimization without GPU, package installation without network).
 
+### Exploration / Exploitation Scheduling
+
+If the launch config includes an exploration policy, follow `references/orchestration-protocol.md` before choosing the next hypothesis. Exploration still needs a falsifiable metric and mechanical verification.
+
 ### Multi-Perspective Reasoning
 
 Apply the four-lens framework from `references/hypothesis-perspectives.md` when appropriate:

@@ -21,6 +21,9 @@ HEADER = [
     "description",
 ]
 SESSION_MODE_CHOICES = ("foreground", "background")
+SELECTION_MODE_CHOICES = ("explore", "exploit")
+STRATEGY_POLICY_CHOICES = ("fixed", "epsilon_greedy", "ucb")
+EXPLORATION_SOURCE_CHOICES = ("local", "web", "docs", "papers")
 EXEC_SCRATCH_ROOT = Path("/tmp/codex-autoresearch-exec")
 LAUNCH_MANIFEST_NAME = "autoresearch-launch.json"
 RUNTIME_STATE_NAME = "autoresearch-runtime.json"

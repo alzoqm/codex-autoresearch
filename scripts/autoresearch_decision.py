@@ -7,8 +7,10 @@ from typing import Any
 
 from autoresearch_helpers import (
     AutoresearchError,
+    apply_iteration_to_orchestration,
     build_state_payload,
     clone_state_payload,
+    clone_orchestration_summary,
     decimal_to_json_number,
     improvement,
     normalize_labels,
@@ -84,6 +86,11 @@ def apply_status_transition(
     state["last_trial_commit"] = commit
     state["last_trial_metric"] = decimal_to_json_number(metric_decimal)
     state["last_trial_labels"] = list(normalized_labels)
+    state["orchestration"] = apply_iteration_to_orchestration(
+        state.get("orchestration"),
+        status=status,
+        labels=normalized_labels,
+    )
     if trial_repo_commits:
         state["last_trial_repo_commits"] = dict(trial_repo_commits)
     else:
@@ -153,6 +160,7 @@ def apply_status_transition(
         "consecutive_discards": state["consecutive_discards"],
         "pivot_count": state["pivot_count"],
         "last_status": state["last_status"],
+        "orchestration": clone_orchestration_summary(state.get("orchestration")),
     }
     if "last_repo_commits" in state:
         rewritten_summary["last_repo_commits"] = dict(state["last_repo_commits"])

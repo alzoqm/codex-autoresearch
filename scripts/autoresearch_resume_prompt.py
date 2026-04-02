@@ -34,6 +34,9 @@ OPTIONAL_CONFIG_FIELDS = (
     ("rollback_policy", "Rollback policy"),
     ("parallel_mode", "Parallel mode"),
     ("web_search", "Web search"),
+    ("strategy_policy", "Strategy policy"),
+    ("exploration_ratio", "Exploration ratio"),
+    ("exploration_sources", "Exploration sources"),
 )
 
 
@@ -96,6 +99,13 @@ def build_runtime_prompt(
             "- Keep all run-control decisions aligned with the launch manifest and current state.",
         ]
     )
+    if config.get("strategy_policy") or config.get("exploration_ratio") not in (None, "", "0"):
+        lines.extend(
+            [
+                "- Use autoresearch_orchestration_decide.py before new hypothesis selection when you need to rebalance exploration vs exploitation.",
+                "- Record iteration selection metadata through autoresearch_record_iteration.py using --selection-mode, --strategy-family, and --evidence-source when applicable.",
+            ]
+        )
     return "\n".join(lines).strip() + "\n"
 
 

@@ -115,6 +115,12 @@ class AutoresearchExecStateTest(AutoresearchScriptsTestBase):
                 "lower",
                 "--verify",
                 "python3 -c pass",
+                "--strategy-policy",
+                "epsilon_greedy",
+                "--exploration-ratio",
+                "0.25",
+                "--exploration-source",
+                "docs",
                 "--required-keep-label",
                 "Real-Backend",
                 "--baseline-metric",
@@ -154,6 +160,9 @@ class AutoresearchExecStateTest(AutoresearchScriptsTestBase):
             state = json.loads(scratch_state_path.read_text(encoding="utf-8"))
             self.assertEqual(state["mode"], "exec")
             self.assertEqual(state["config"]["required_keep_labels"], ["real-backend"])
+            self.assertEqual(state["config"]["strategy_policy"], "epsilon_greedy")
+            self.assertEqual(state["config"]["exploration_ratio"], "0.25")
+            self.assertEqual(state["config"]["exploration_sources"], ["docs"])
             self.assertEqual(state["state"]["current_metric"], 10)
             self.assertEqual(state["state"]["best_metric"], 10)
             self.assertEqual(state["state"]["last_trial_commit"], "keep222")

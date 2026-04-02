@@ -98,6 +98,9 @@ class AutoresearchScriptsTestBase(unittest.TestCase):
         stop_condition: str | None = None,
         required_stop_labels: list[str] | None = None,
         required_keep_labels: list[str] | None = None,
+        strategy_policy: str = "fixed",
+        exploration_ratio: str = "0",
+        exploration_sources: list[str] | None = None,
         companion_repo_scopes: list[str] | None = None,
     ) -> dict[str, object]:
         args = [
@@ -121,6 +124,10 @@ class AutoresearchScriptsTestBase(unittest.TestCase):
             verify,
             "--execution-policy",
             execution_policy,
+            "--strategy-policy",
+            strategy_policy,
+            "--exploration-ratio",
+            exploration_ratio,
         ]
         if guard is not None:
             args.extend(["--guard", guard])
@@ -130,6 +137,8 @@ class AutoresearchScriptsTestBase(unittest.TestCase):
             args.extend(["--required-stop-label", label])
         for label in required_keep_labels or []:
             args.extend(["--required-keep-label", label])
+        for value in exploration_sources or []:
+            args.extend(["--exploration-source", value])
         for value in companion_repo_scopes or []:
             args.extend(["--companion-repo-scope", value])
         return self.run_script(*args)
@@ -178,6 +187,9 @@ class AutoresearchScriptsTestBase(unittest.TestCase):
         fresh_start: bool = False,
         required_stop_labels: list[str] | None = None,
         required_keep_labels: list[str] | None = None,
+        strategy_policy: str = "fixed",
+        exploration_ratio: str = "0",
+        exploration_sources: list[str] | None = None,
         companion_repo_scopes: list[str] | None = None,
     ) -> dict[str, object]:
         args = [
@@ -203,6 +215,10 @@ class AutoresearchScriptsTestBase(unittest.TestCase):
             guard,
             "--execution-policy",
             execution_policy,
+            "--strategy-policy",
+            strategy_policy,
+            "--exploration-ratio",
+            exploration_ratio,
             "--codex-bin",
             str(fake_codex_path),
         ]
@@ -212,6 +228,8 @@ class AutoresearchScriptsTestBase(unittest.TestCase):
             args.extend(["--required-stop-label", label])
         for label in required_keep_labels or []:
             args.extend(["--required-keep-label", label])
+        for value in exploration_sources or []:
+            args.extend(["--exploration-source", value])
         if fresh_start:
             args.append("--fresh-start")
         return self.run_script(*args)

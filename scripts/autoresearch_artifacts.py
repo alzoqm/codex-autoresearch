@@ -27,6 +27,13 @@ from autoresearch_core import (
     utc_now,
     REQUIRED_STATE_FIELDS,
 )
+from autoresearch_orchestration import (
+    apply_iteration_to_orchestration,
+    clone_orchestration_summary,
+    normalize_exploration_ratio,
+    normalize_exploration_sources,
+    normalize_strategy_policy,
+)
 
 
 def read_json(path: Path) -> dict[str, Any]:
@@ -265,6 +272,7 @@ def log_summary(parsed: ParsedLog, direction: str) -> dict[str, Any]:
         "last_status": "baseline",
         "worker_rows": 0,
         "main_rows": 1,
+        "orchestration": clone_orchestration_summary(None),
     }
     for row in parsed.rows[1:]:
         if row.worker_parent_iteration is not None:
@@ -286,6 +294,11 @@ def log_summary(parsed: ParsedLog, direction: str) -> dict[str, Any]:
         summary["last_trial_commit"] = row.commit
         summary["last_trial_metric"] = row.metric
         summary["last_trial_labels"] = list(row.labels)
+        summary["orchestration"] = apply_iteration_to_orchestration(
+            summary.get("orchestration"),
+            status=row.status,
+            labels=row.labels,
+        )
 
         if row.status == "keep":
             summary["keeps"] += 1
@@ -375,6 +388,13 @@ def compare_summary_to_state(
     compare_scalar_field("consecutive_discards")
     compare_scalar_field("pivot_count")
     compare_scalar_field("last_status")
+    if "orchestration" in state:
+        expected_orchestration = clone_orchestration_summary(reconstructed.get("orchestration"))
+        actual_orchestration = clone_orchestration_summary(state.get("orchestration"))
+        if actual_orchestration != expected_orchestration:
+            mismatches.append(
+                f"orchestration: state={actual_orchestration!r} tsv={expected_orchestration!r}"
+            )
     if "current_labels" in state:
         if normalize_labels(state["current_labels"]) != reconstructed.get("current_labels", []):
             mismatches.append(
@@ -408,6 +428,8 @@ def config_from_results_metadata(metadata: dict[str, str]) -> dict[str, Any]:
         "stop_condition": "stop_condition",
         "rollback_policy": "rollback_policy",
         "execution_policy": "execution_policy",
+        "strategy_policy": "strategy_policy",
+        "exploration_ratio": "exploration_ratio",
     }
     for metadata_key, config_key in field_map.items():
         value = metadata.get(metadata_key)
@@ -456,6 +478,16 @@ def config_from_results_metadata(metadata: dict[str, str]) -> dict[str, Any]:
     required_keep_labels = normalize_labels(metadata.get("required_keep_labels"))
     if required_keep_labels:
         config["required_keep_labels"] = required_keep_labels
+    exploration_sources = normalize_exploration_sources(metadata.get("exploration_sources"))
+    if exploration_sources:
+        config["exploration_sources"] = exploration_sources
+    if "strategy_policy" in config:
+        config["strategy_policy"] = normalize_strategy_policy(config["strategy_policy"])
+    if "exploration_ratio" in config:
+        config["exploration_ratio"] = format(
+            normalize_exploration_ratio(config["exploration_ratio"]),
+            "f",
+        )
 
     return config
 
@@ -493,6 +525,7 @@ def build_state_payload(
             "consecutive_discards": summary["consecutive_discards"],
             "pivot_count": summary["pivot_count"],
             "last_status": summary["last_status"],
+            "orchestration": clone_orchestration_summary(summary.get("orchestration")),
         },
         "updated_at": utc_now(),
     }

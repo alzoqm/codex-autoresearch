@@ -76,6 +76,22 @@ def add_manifest_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--rollback-policy")
     parser.add_argument("--parallel-mode", choices=["serial", "parallel"], default="serial")
     parser.add_argument("--web-search", choices=["enabled", "disabled"], default="disabled")
+    parser.add_argument(
+        "--strategy-policy",
+        choices=["fixed", "epsilon_greedy", "ucb"],
+        default="fixed",
+    )
+    parser.add_argument(
+        "--exploration-ratio",
+        default="0",
+        help="Target exploration share between 0 and 1 inclusive.",
+    )
+    parser.add_argument(
+        "--exploration-source",
+        action="append",
+        default=[],
+        help="Allowed exploration evidence sources. May be repeated.",
+    )
     parser.add_argument("--approval", action="append", default=[])
     parser.add_argument("--default", action="append", default=[])
     parser.add_argument("--resume-seed", action="append", default=[])

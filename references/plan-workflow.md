@@ -28,6 +28,9 @@ Derived or collected:
 - Direction
 - Verify
 - Guard
+- Strategy policy
+- Exploration ratio
+- Exploration sources
 - Iterations
 - Required keep labels
 - Required stop labels
@@ -42,6 +45,9 @@ Derived or collected:
 | `--direction higher|lower` | Pre-fill direction |
 | `--verify "<command>"` | Pre-fill verify command |
 | `--guard "<command>"` | Pre-fill guard |
+| `--strategy-policy fixed|epsilon_greedy|ucb` | Pre-fill the exploration/exploitation scheduler |
+| `--exploration-ratio 0..1` | Pre-fill the target exploration share |
+| `--exploration-source <source>` | Allow exploratory evidence inputs such as `docs` or `papers` |
 | `--required-keep-label <label>` | Require retained-state eligibility labels before an improved result can become `keep` |
 | `--required-stop-label <label>` | Require retained labels before a numeric stop condition can stop the run |
 | `--launch` | Launch immediately after validation |
@@ -59,9 +65,10 @@ Preferred field order:
 4. Direction
 5. Verify
 6. Guard
-7. Required keep labels (when only a specific mechanism/path/root cause should be allowed into retained state)
-8. Required stop labels (when the success condition depends on mechanism/path/root cause, not just the number)
-9. Launch
+7. Strategy policy / Exploration ratio (when the run should deliberately blend exploration and exploitation)
+8. Required keep labels (when only a specific mechanism/path/root cause should be allowed into retained state)
+9. Required stop labels (when the success condition depends on mechanism/path/root cause, not just the number)
+10. Launch
 
 ## Phases
 
@@ -146,6 +153,9 @@ Metric:
 Direction:
 Verify:
 Guard:
+Strategy policy:
+Exploration ratio:
+Exploration sources:
 Required keep labels:
 Required stop labels:
 Iterations:
@@ -162,9 +172,10 @@ Reply sections:
 3. Suggested Metric
 4. Verify Command
 5. Guard
-6. Required Keep Labels (when applicable)
-7. Required Stop Labels (when applicable)
-8. Launch Block
+6. Strategy Policy / Exploration Ratio (when applicable)
+7. Required Keep Labels (when applicable)
+8. Required Stop Labels (when applicable)
+9. Launch Block
 
 ## Success Criteria
 
