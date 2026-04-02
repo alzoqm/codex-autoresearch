@@ -9,6 +9,9 @@ autoresearch-hook-context.json
 autoresearch-hook-context.prev.json
 autoresearch-hook-context.json.bak
 autoresearch-hook-context.json.tmp
+autoresearch-launch.json
+autoresearch-runtime.json
+autoresearch-runtime.log
 research-results.tsv.tmp
 results.tsv
 run.log
@@ -19,6 +22,8 @@ autoresearch-lessons.md
 __pycache__/
 *.pyc
 .venv/
+.agents/
+.omx/
 debug/
 fix/
 security/
