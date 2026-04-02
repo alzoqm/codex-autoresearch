@@ -184,6 +184,98 @@ class AutoresearchResearchFlowTest(AutoresearchScriptsTestBase):
             )
             self.assertTrue((tmpdir / "experiment-reports" / "EXP-4.md").exists())
 
+    def test_generate_hypotheses_prioritizes_ranked_entries_for_active_queue(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmpdir = Path(tmp)
+            results_path = tmpdir / "research-results.tsv"
+            state_path = tmpdir / "autoresearch-state.json"
+
+            self.run_script(
+                "autoresearch_init_run.py",
+                "--results-path",
+                str(results_path),
+                "--state-path",
+                str(state_path),
+                "--mode",
+                "loop",
+                "--goal",
+                "Research-first optimization",
+                "--scope",
+                "src/**/*.py",
+                "--metric-name",
+                "score",
+                "--direction",
+                "higher",
+                "--verify",
+                "python3 -c pass",
+                "--research-mode",
+                "research_first",
+                "--baseline-metric",
+                "10",
+                "--baseline-commit",
+                "base111",
+                "--baseline-description",
+                "baseline score",
+            )
+
+            result = self.run_script(
+                "autoresearch_generate_hypotheses.py",
+                "--state-path",
+                str(state_path),
+                "--hypothesis-id",
+                "idea-queued",
+                "--title",
+                "Queued first",
+                "--statement",
+                "Try the lower-priority idea first",
+                "--source-ids",
+                "s-paper-a",
+                "--strategy-family",
+                "queued-family",
+                "--expected-effect",
+                "small gain",
+                "--verify-plan",
+                "measure score",
+                "--guard-plan",
+                "tests pass",
+                "--cost",
+                "low",
+                "--risk",
+                "low",
+                "--status",
+                "queued",
+                "--hypothesis-id",
+                "idea-ranked",
+                "--title",
+                "Ranked later",
+                "--statement",
+                "Prefer the explicitly ranked idea",
+                "--source-ids",
+                "s-paper-b",
+                "--strategy-family",
+                "ranked-family",
+                "--expected-effect",
+                "larger gain",
+                "--verify-plan",
+                "measure score",
+                "--guard-plan",
+                "tests pass",
+                "--cost",
+                "low",
+                "--risk",
+                "low",
+                "--status",
+                "ranked",
+            )
+
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+            self.assertEqual(
+                result["queued_hypothesis_ids"],
+                ["h-idea-ranked", "h-idea-queued"],
+            )
+            self.assertEqual(state["state"]["queued_hypothesis_ids"], ["h-idea-ranked", "h-idea-queued"])
+            self.assertEqual(state["state"]["active_hypothesis_id"], "h-idea-ranked")
+
     def test_record_iteration_persists_hypothesis_and_report_metadata(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmpdir = Path(tmp)

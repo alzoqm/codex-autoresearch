@@ -17,6 +17,26 @@ from autoresearch_helpers import (
 )
 
 
+STATUS_PRIORITY = {
+    "selected": 0,
+    "ranked": 1,
+    "queued": 2,
+}
+
+
+def prioritized_hypotheses(items: list[dict[str, object]]) -> list[dict[str, object]]:
+    prioritized: list[dict[str, object]] = []
+    for index, item in enumerate(items):
+        if not isinstance(item, dict):
+            continue
+        status = str(item.get("status", "")).strip()
+        if status not in STATUS_PRIORITY:
+            continue
+        prioritized.append(item | {"_priority": STATUS_PRIORITY[status], "_index": index})
+    prioritized.sort(key=lambda item: (int(item["_priority"]), int(item["_index"])))
+    return prioritized
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Persist ranked hypotheses gathered during exploration."
@@ -97,10 +117,11 @@ def main() -> int:
     research["exploration"]["hypotheses_ranked"] = len(
         [item for item in existing_items if isinstance(item, dict) and item.get("status") in {"queued", "ranked", "selected"}]
     )
+    prioritized_items = prioritized_hypotheses(existing_items)
     research["queued_hypothesis_ids"] = [
-        item["hypothesis_id"]
-        for item in existing_items
-        if isinstance(item, dict) and item.get("status") in {"queued", "ranked", "selected"}
+        str(item["hypothesis_id"])
+        for item in prioritized_items
+        if str(item.get("hypothesis_id", "")).strip()
     ]
     if research["queued_hypothesis_ids"] and not research["active_hypothesis_id"]:
         research["active_hypothesis_id"] = research["queued_hypothesis_ids"][0]
