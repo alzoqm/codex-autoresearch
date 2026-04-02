@@ -16,6 +16,10 @@ research-results.tsv.tmp
 results.tsv
 run.log
 autoresearch-lessons.md
+research-sources.md
+research-corpus.jsonl
+hypothesis-registry.json
+experiment-reports/
 !tests/e2e-fixtures/exec_marker_reduction/research-results.tsv
 !tests/e2e-fixtures/exec_marker_reduction/autoresearch-state.json
 !tests/e2e-fixtures/exec_marker_reduction/autoresearch-lessons.md
