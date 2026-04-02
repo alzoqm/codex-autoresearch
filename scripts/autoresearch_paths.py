@@ -129,19 +129,27 @@ def parse_scope_patterns(scope_text: str | None) -> list[str]:
     return [token for token in re.split(r"[\s,]+", scope_text.strip()) if token]
 
 
+def normalize_relpath_text(path: str | Path) -> str:
+    normalized = str(path).replace("\\", "/")
+    if normalized.startswith("./"):
+        normalized = normalized[2:]
+    if normalized.endswith("/") and normalized != "/":
+        normalized = normalized.rstrip("/")
+    return normalized
+
+
 def path_is_in_scope(path: str, patterns: list[str]) -> bool:
     if not patterns:
         return False
 
-    normalized = path.replace("\\", "/")
-    stripped_path = normalized.lstrip("./")
+    stripped_path = normalize_relpath_text(path)
     candidate = PurePosixPath(stripped_path)
     for pattern in patterns:
         pattern = pattern.strip()
         if not pattern:
             continue
 
-        normalized_pattern = pattern.replace("\\", "/").lstrip("./")
+        normalized_pattern = normalize_relpath_text(pattern)
         is_glob = any(marker in normalized_pattern for marker in "*?[")
         base = normalized_pattern.rstrip("/")
 
@@ -161,6 +169,51 @@ def path_is_in_scope(path: str, patterns: list[str]) -> bool:
             return True
 
     return False
+
+
+def is_local_session_metadata(path: str | Path) -> bool:
+    normalized = normalize_relpath_text(path)
+    return normalized == ".omx" or normalized.startswith(".omx/")
+
+
+def is_repo_local_skill_mirror_path(path: str | Path) -> bool:
+    normalized = normalize_relpath_text(path)
+    prefix = ".agents/skills/codex-autoresearch"
+    return normalized in {".agents", ".agents/skills", prefix} or normalized.startswith(f"{prefix}/")
+
+
+def repo_local_skill_mirror_is_in_scope(path: str | Path, patterns: list[str]) -> bool:
+    if not patterns:
+        return False
+    normalized = normalize_relpath_text(path)
+    prefix = ".agents/skills/codex-autoresearch"
+    if normalized in {".agents", ".agents/skills", prefix}:
+        return any(
+            path_is_in_scope(candidate, patterns)
+            for candidate in (
+                "SKILL.md",
+                "scripts/autoresearch_runtime_ctl.py",
+                "references/core-principles.md",
+            )
+        )
+    if not normalized.startswith(f"{prefix}/"):
+        return False
+
+    suffix = normalized[len(prefix) + 1 :]
+    if suffix == "SKILL.md":
+        return path_is_in_scope("SKILL.md", patterns)
+    if suffix.startswith("scripts/") or suffix.startswith("references/"):
+        return path_is_in_scope(suffix, patterns)
+    return False
+
+
+def path_is_allowed_worktree_change(path: str | Path, patterns: list[str]) -> bool:
+    return (
+        is_autoresearch_owned_artifact(path)
+        or is_local_session_metadata(path)
+        or path_is_in_scope(str(path), patterns)
+        or repo_local_skill_mirror_is_in_scope(path, patterns)
+    )
 
 
 def is_autoresearch_owned_artifact(path: str | Path) -> bool:

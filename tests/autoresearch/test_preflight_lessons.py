@@ -104,6 +104,30 @@ class AutoresearchPreflightLessonsTest(AutoresearchScriptsTestBase):
             self.assertEqual(result["decision"], "allow")
             self.assertEqual(result["unexpected_worktree"], [])
 
+    def test_commit_gate_allows_research_reports_local_omx_and_repo_local_skill_mirror(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            subprocess.run(["git", "init", str(repo)], check=True, capture_output=True, text=True)
+            (repo / "experiment-reports").mkdir(parents=True, exist_ok=True)
+            (repo / "experiment-reports" / "EXP-1.md").write_text("# EXP-1\n", encoding="utf-8")
+            (repo / ".omx" / "state").mkdir(parents=True, exist_ok=True)
+            (repo / ".omx" / "state" / "hud-state.json").write_text("{}\n", encoding="utf-8")
+            mirror = repo / ".agents" / "skills" / "codex-autoresearch" / "scripts"
+            mirror.mkdir(parents=True, exist_ok=True)
+            (mirror / "autoresearch_runtime_ctl.py").write_text("# mirror\n", encoding="utf-8")
+
+            result = self.run_script(
+                "autoresearch_commit_gate.py",
+                "--repo",
+                str(repo),
+                "--phase",
+                "precommit",
+                "--scope",
+                "scripts/**,references/**,README.md",
+            )
+            self.assertEqual(result["decision"], "allow")
+            self.assertEqual(result["unexpected_worktree"], [])
+
     def test_commit_gate_treats_directory_scope_as_in_scope_subtree(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             repo = Path(tmp)

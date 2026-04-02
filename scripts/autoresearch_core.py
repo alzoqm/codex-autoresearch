@@ -47,6 +47,7 @@ AUTORESEARCH_OWNED_BASENAMES = {
     "research-sources.md",
     "research-corpus.jsonl",
     "hypothesis-registry.json",
+    "experiment-reports",
 }
 
 MAIN_LABEL_RE = re.compile(r"^(0|[1-9]\d*)$")

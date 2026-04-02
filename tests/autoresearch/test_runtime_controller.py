@@ -242,6 +242,75 @@ class AutoresearchRuntimeControllerTest(AutoresearchScriptsTestBase):
             )
             self.assertEqual(stopped["status"], "stopped")
 
+    def test_runtime_launch_resume_tolerates_research_reports_local_omx_and_skill_mirror(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            subprocess.run(["git", "init", str(repo)], check=True, capture_output=True, text=True)
+            (repo / "scripts").mkdir(parents=True, exist_ok=True)
+            fake_codex_path = repo / "scripts" / "fake-codex"
+            self.write_sleeping_fake_codex(fake_codex_path)
+
+            self.run_script(
+                "autoresearch_init_run.py",
+                "--results-path",
+                str(repo / "research-results.tsv"),
+                "--state-path",
+                str(repo / "autoresearch-state.json"),
+                "--mode",
+                "loop",
+                "--goal",
+                "Stabilize runtime launch",
+                "--scope",
+                "scripts/**,references/**,README.md",
+                "--metric-name",
+                "score",
+                "--direction",
+                "higher",
+                "--verify",
+                "python3 -c pass",
+                "--guard",
+                "python3 -c pass",
+                "--research-mode",
+                "research_first",
+                "--baseline-metric",
+                "10",
+                "--baseline-commit",
+                "base111",
+                "--baseline-description",
+                "baseline score",
+                cwd=repo,
+            )
+            state_path = repo / "autoresearch-state.json"
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+            state["state"]["phase"] = "exploitation"
+            state_path.write_text(json.dumps(state, indent=2) + "\n", encoding="utf-8")
+            (repo / "experiment-reports").mkdir(parents=True, exist_ok=True)
+            (repo / "experiment-reports" / "EXP-1.md").write_text("# EXP-1\n", encoding="utf-8")
+            (repo / ".omx" / "state").mkdir(parents=True, exist_ok=True)
+            (repo / ".omx" / "state" / "hud-state.json").write_text("{}\n", encoding="utf-8")
+            mirror = repo / ".agents" / "skills" / "codex-autoresearch" / "scripts"
+            mirror.mkdir(parents=True, exist_ok=True)
+            (mirror / "autoresearch_runtime_ctl.py").write_text("# mirror\n", encoding="utf-8")
+
+            launched = self.launch_runtime(
+                repo,
+                fake_codex_path=fake_codex_path,
+                goal="Stabilize runtime launch",
+                scope="scripts/**,references/**,README.md",
+                metric_name="score",
+                direction="higher",
+                verify="python3 -c pass",
+                guard="python3 -c pass",
+            )
+            self.assertEqual(launched["status"], "running")
+            stopped = self.run_script(
+                "autoresearch_runtime_ctl.py",
+                "stop",
+                "--repo",
+                str(repo),
+            )
+            self.assertEqual(stopped["status"], "stopped")
+
     def test_runtime_launch_writes_background_hook_context_for_custom_paths(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmpdir = Path(tmp)

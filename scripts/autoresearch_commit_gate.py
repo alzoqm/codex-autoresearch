@@ -15,7 +15,7 @@ from autoresearch_helpers import (
     has_git_repo,
     is_autoresearch_owned_artifact,
     parse_scope_patterns,
-    path_is_in_scope,
+    path_is_allowed_worktree_change,
 )
 
 
@@ -52,7 +52,7 @@ def evaluate_commit_gate(
 
     for entry in status_entries:
         for raw_path in entry.touched_paths:
-            if not is_autoresearch_owned_artifact(raw_path) and not path_is_in_scope(raw_path, scope_patterns):
+            if not path_is_allowed_worktree_change(raw_path, scope_patterns):
                 unexpected_worktree.append(raw_path)
             if entry.has_staged_change and is_autoresearch_owned_artifact(raw_path):
                 staged_artifacts.append(raw_path)

@@ -15,10 +15,9 @@ from autoresearch_helpers import (
     command_is_executable,
     git_status_paths,
     has_git_repo,
-    is_autoresearch_owned_artifact,
     lexical_abspath,
     parse_scope_patterns,
-    path_is_in_scope,
+    path_is_allowed_worktree_change,
     results_repo_root,
 )
 from autoresearch_resume_check import evaluate_resume_state
@@ -74,7 +73,7 @@ def run_health_check(
             dirty_lines = git_status_paths(target.path)
             scope_patterns = parse_scope_patterns(target.scope)
             for path in dirty_lines:
-                if not is_autoresearch_owned_artifact(path) and not path_is_in_scope(path, scope_patterns):
+                if not path_is_allowed_worktree_change(path, scope_patterns):
                     unexpected.append(path)
             if unexpected:
                 label = format_repo_target_label(target, primary_repo)
