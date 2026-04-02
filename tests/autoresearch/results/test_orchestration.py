@@ -4,6 +4,8 @@ import json
 import tempfile
 from pathlib import Path
 
+from scripts.autoresearch_orchestration import clone_orchestration_summary
+
 from ..base import AutoresearchScriptsTestBase
 
 
@@ -224,3 +226,24 @@ class AutoresearchOrchestrationTest(AutoresearchScriptsTestBase):
             self.assertEqual(decision["target_exploration_ratio"], "0.4")
             self.assertEqual(decision["attempts_by_mode"], {"explore": 0, "exploit": 1})
             self.assertEqual(decision["selection_mode"], "explore")
+
+    def test_clone_orchestration_summary_tolerates_malformed_counts(self) -> None:
+        summary = clone_orchestration_summary(
+            {
+                "attempts_by_mode": {"explore": "2", "exploit": "bad"},
+                "family_stats": {
+                    "paper idea": {
+                        "attempts": "oops",
+                        "keeps": "1",
+                        "non_keeps": None,
+                        "selection_mode": "explore",
+                        "evidence_sources": ["papers", "docs"],
+                    }
+                },
+            }
+        )
+
+        self.assertEqual(summary["attempts_by_mode"], {"explore": 2, "exploit": 0})
+        self.assertEqual(summary["family_stats"]["paper-idea"]["attempts"], 0)
+        self.assertEqual(summary["family_stats"]["paper-idea"]["keeps"], 1)
+        self.assertEqual(summary["family_stats"]["paper-idea"]["non_keeps"], 0)

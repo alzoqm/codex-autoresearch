@@ -18,6 +18,19 @@ FAMILY_LABEL_PREFIX = "family/"
 SOURCE_LABEL_PREFIX = "source/"
 
 
+def _coerce_int(value: Any, *, default: int = 0) -> int:
+    try:
+        if isinstance(value, bool):
+            return int(value)
+        if isinstance(value, (int, float)):
+            return int(value)
+        if isinstance(value, str) and value.strip():
+            return int(value.strip())
+    except (TypeError, ValueError):
+        return default
+    return default
+
+
 def normalize_strategy_family(value: str | None) -> str | None:
     if value is None:
         return None
@@ -173,9 +186,7 @@ def clone_orchestration_summary(summary: dict[str, Any] | None) -> dict[str, Any
         value = summary.get(key)
         if isinstance(value, dict):
             for mode in SELECTION_MODE_CHOICES:
-                raw = value.get(mode, 0)
-                if isinstance(raw, (int, float)):
-                    cloned[key][mode] = int(raw)
+                cloned[key][mode] = _coerce_int(value.get(mode, 0))
     last_selection_mode = summary.get("last_selection_mode")
     if isinstance(last_selection_mode, str):
         cloned["last_selection_mode"] = last_selection_mode
@@ -193,9 +204,9 @@ def clone_orchestration_summary(summary: dict[str, Any] | None) -> dict[str, Any
             if family is None or not isinstance(raw_stats, dict):
                 continue
             normalized_families[family] = {
-                "attempts": int(raw_stats.get("attempts", 0)),
-                "keeps": int(raw_stats.get("keeps", 0)),
-                "non_keeps": int(raw_stats.get("non_keeps", 0)),
+                "attempts": _coerce_int(raw_stats.get("attempts", 0)),
+                "keeps": _coerce_int(raw_stats.get("keeps", 0)),
+                "non_keeps": _coerce_int(raw_stats.get("non_keeps", 0)),
                 "last_status": str(raw_stats.get("last_status", "")),
                 "selection_mode": str(raw_stats.get("selection_mode", "")),
                 "evidence_sources": normalize_exploration_sources(
